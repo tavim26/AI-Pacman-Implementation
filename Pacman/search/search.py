@@ -190,9 +190,47 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
-    """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """
+    Search the node of least total cost first.
+
+    Returns a list of actions that reaches the goal.
+    """
+    from util import PriorityQueue
+
+    # 1. Inițializează coada de priorități cu starea inițială
+    start_position = problem.getStartState()
+    queue = PriorityQueue()
+    queue.push((start_position, []), 0)  # (poziția, drumul), costul inițial 0
+
+    # 2. Set pentru a reține stările vizitate
+    visited = set()
+
+    # 3. Cât timp coada de priorități nu este goală
+    while not queue.isEmpty():
+        # a. Extrage nodul cu cel mai mic cost din coadă
+        current_position, path = queue.pop()
+
+        # b. Dacă poziția curentă este destinația finală, returnează calea
+        if problem.isGoalState(current_position):
+            return path
+
+        # c. Dacă current_position nu este în visited
+        if current_position not in visited:
+            # Adaugă current_position la visited
+            visited.add(current_position)
+
+            # d. Pentru fiecare succesor al current_position
+            for successor, action, step_cost in problem.getSuccessors(current_position):
+                # i. Dacă succesorul nu a fost vizitat
+                if successor not in visited:
+                    # Calculează costul total până la succesor
+                    new_cost = problem.getCostOfActions(path + [action])
+                    # Adaugă succesorul în coadă cu noul cost și drumul actualizat
+                    queue.push((successor, path + [action]), new_cost)
+
+    # 4. Dacă nu s-a găsit o cale, returnează o listă goală
+    return []
+
 
 
 
@@ -206,9 +244,53 @@ def nullHeuristic(state, problem=None) -> float:
 
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """
+    Search the node that has the lowest combined cost and heuristic first.
+
+    Returns a list of actions that reaches the goal.
+    """
+    from util import PriorityQueue
+
+    # 1. Inițializează coada de priorități cu starea inițială
+    start_position = problem.getStartState()
+    queue = PriorityQueue()
+    queue.push((start_position, []), 0)
+
+    # 2. Set de noduri vizitate și dicționar pentru cel mai mic cost
+    visited = set()
+    best_cost = {start_position: 0}
+
+    # 3. Cât timp coada de priorități nu este goală
+    while not queue.isEmpty():
+        # a. Extrage nodul cu cel mai mic cost total (cost_drum + euristica)
+        current_position, path = queue.pop()
+
+        # b. Dacă poziția curentă este destinația finală, returnează calea
+        if problem.isGoalState(current_position):
+            return path
+
+        # c. Dacă current_position nu este în visited
+        if current_position not in visited:
+            # Adaugă current_position la visited
+            visited.add(current_position)
+
+            # d. Pentru fiecare succesor al current_position
+            for successor, action, step_cost in problem.getSuccessors(current_position):
+
+                new_path = path + [action]
+                new_cost = problem.getCostOfActions(new_path)
+                heuristic_cost = heuristic(successor, problem)
+                total_cost = new_cost + heuristic_cost
+
+                # i. Dacă succesorul nu a fost vizitat sau am găsit un cost mai mic
+                if successor not in visited or new_cost < best_cost.get(successor, float('inf')):
+                    # Actualizează cel mai mic cost și adaugă succesorul în coadă cu noul cost total
+                    best_cost[successor] = new_cost
+                    queue.push((successor, new_path), total_cost)
+
+    # 4. Dacă nu s-a găsit o cale, returnează o listă goală
+    return []
+
 
 
 
