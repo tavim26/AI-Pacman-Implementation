@@ -86,106 +86,58 @@ def tinyMazeSearch(problem: SearchProblem) -> List[Directions]:
 
 # things to be implemented below
 
+
+
+# DFS
 def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
-    """
-    Search the deepest nodes in the search tree first.
 
-    Returns a list of actions that reaches the goal.
-    """
+    stack = [(problem.getStartState(), [])]
 
-    # Afișează detalii inițiale despre problemă
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
-
-    from util import Stack
-
-    # 1.init stiva start
-    start_position = problem.getStartState()
-    stack = Stack()
-    stack.push((start_position, []))  # perechea (poz, drum pana la poz)
-
-    # 2.set noduri nevizitate
     visited = set()
 
-    # 3. cat timp stiva nu e goala
-    while not stack.isEmpty():
-        # a. extrage nod din vf stivei
-        (current_position, path) = stack.pop()
+    while stack:
+        current_position, path = stack.pop()
 
-        # b. daca current poz nu e dest finala, returnam drumul catre destinatie
         if problem.isGoalState(current_position):
             return path
 
-        # c. daca current_position nu este în visited
         if current_position not in visited:
-            # add current_position la visited
             visited.add(current_position)
 
-            # d. pentru fiecare vecin al lui current_poz
-            for successor, action, _ in problem.getSuccessors(current_position):
-
-                # i. daca vecinul nu e in visited
+            for successor, action, cost in problem.getSuccessors(current_position):
                 if successor not in visited:
-                    # adauga (vecin, calea spre vecin) in stiva
-                    stack.push((successor, path + [action]))
+                    stack.append((successor, path + [action]))
 
-
-    # 4.daca stiva e goala si nu s-a gasit cale, ret null
     return []
 
 
 
 
-
-
+#BFS
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
-    """
-    Search the shallowest nodes in the search tree first.
-
-    Returns a list of actions that reaches the goal.
-    """
-
-    # Afișează detalii inițiale despre problemă
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
 
     from util import Queue
 
-    # 1. Inițializează coada cu starea inițială
     start_position = problem.getStartState()
     queue = Queue()
-    queue.push((start_position, []))  # perechea (poz, drum până la poz)
+    queue.push((start_position, []))
 
-    # 2. Set de noduri vizitate
     visited = set()
 
-    # 3. Cât timp coada nu este goală
     while not queue.isEmpty():
-        # a. Extrage nodul din capul cozii
-        (current_position, path) = queue.pop()
+        current_position, path = queue.pop()
 
-        # b. Dacă poziția curentă este destinația finală, returnează drumul către destinație
         if problem.isGoalState(current_position):
             return path
 
-        # c. Dacă current_position nu este în visited
         if current_position not in visited:
-            # Adaugă current_position la visited
             visited.add(current_position)
 
-            # d. Pentru fiecare vecin al lui current_position
             for successor, action, _ in problem.getSuccessors(current_position):
-
-                # i. Dacă vecinul nu este în visited
                 if successor not in visited:
-                    # Adaugă (vecin, calea spre vecin) în coadă
                     queue.push((successor, path + [action]))
 
-    # 4. Dacă coada este goală și nu s-a găsit o cale, returnează null
     return []
-
 
 
 
@@ -195,22 +147,26 @@ def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
 
     Returns a list of actions that reaches the goal.
     """
+
     from util import PriorityQueue
 
-    # 1. Inițializează coada de priorități cu starea inițială
+    # 1. Inițializează coada de priorități cu starea inițială și costul 0
     start_position = problem.getStartState()
-    queue = PriorityQueue()
-    queue.push((start_position, []), 0)  # (poziția, drumul), costul inițial 0
+    priority_queue = PriorityQueue()
+    priority_queue.push((start_position, []), 0)  # Perechea (poziție, drum până aici), cost 0
 
-    # 2. Set pentru a reține stările vizitate
+    # 2. Creează un dicționar pentru a stoca cel mai mic cost pentru fiecare stare
+    cost_map = {start_position: 0}
+
+    # 3. Set pentru a urmări nodurile vizitate
     visited = set()
 
-    # 3. Cât timp coada de priorități nu este goală
-    while not queue.isEmpty():
-        # a. Extrage nodul cu cel mai mic cost din coadă
-        current_position, path = queue.pop()
+    # 4. Cât timp coada de priorități nu este goală
+    while not priority_queue.isEmpty():
+        # a. Extrage starea cu cel mai mic cost total
+        current_position, path = priority_queue.pop()
 
-        # b. Dacă poziția curentă este destinația finală, returnează calea
+        # b. Dacă starea curentă este destinația finală, returnează drumul către destinație
         if problem.isGoalState(current_position):
             return path
 
@@ -219,16 +175,19 @@ def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
             # Adaugă current_position la visited
             visited.add(current_position)
 
-            # d. Pentru fiecare succesor al current_position
+            # d. Pentru fiecare succesor (vecin) al current_position
             for successor, action, step_cost in problem.getSuccessors(current_position):
-                # i. Dacă succesorul nu a fost vizitat
-                if successor not in visited:
-                    # Calculează costul total până la succesor
-                    new_cost = problem.getCostOfActions(path + [action])
-                    # Adaugă succesorul în coadă cu noul cost și drumul actualizat
-                    queue.push((successor, path + [action]), new_cost)
+                # Calculează noul cost al drumului până la acest succesor
+                new_cost = cost_map[current_position] + step_cost
 
-    # 4. Dacă nu s-a găsit o cale, returnează o listă goală
+                # Dacă succesorul nu este în visited sau am găsit un drum mai ieftin
+                if successor not in visited or new_cost < cost_map.get(successor, float('inf')):
+                    # Actualizează cost_map cu noul cost minim
+                    cost_map[successor] = new_cost
+                    # Adaugă succesorul în coada de priorități
+                    priority_queue.push((successor, path + [action]), new_cost)
+
+    # 5. Dacă nu se găsește nicio soluție, returnează o listă goală
     return []
 
 
@@ -242,57 +201,44 @@ def nullHeuristic(state, problem=None) -> float:
     return 0
 
 
-
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
-    """
-    Search the node that has the lowest combined cost and heuristic first.
 
-    Returns a list of actions that reaches the goal.
-    """
+
     from util import PriorityQueue
 
-    # 1. Inițializează coada de priorități cu starea inițială
-    start_position = problem.getStartState()
-    queue = PriorityQueue()
-    queue.push((start_position, []), 0)
+    # 1. Inițializarea cozii de priorități și a setului de stări vizitate
+    start_state = problem.getStartState()
+    priority_queue = PriorityQueue()
+    priority_queue.push((start_state, []), heuristic(start_state, problem))  # Adaugă starea inițială cu f(n) = h(n)
 
-    # 2. Set de noduri vizitate și dicționar pentru cel mai mic cost
-    visited = set()
-    best_cost = {start_position: 0}
+    # Dicționar pentru a stoca cel mai mic cost total până la fiecare nod
+    cost_map = {start_state: 0}
 
-    # 3. Cât timp coada de priorități nu este goală
-    while not queue.isEmpty():
-        # a. Extrage nodul cu cel mai mic cost total (cost_drum + euristica)
-        current_position, path = queue.pop()
+    # 2. Căutare în spațiul stărilor
+    while not priority_queue.isEmpty():
+        # Extrage nodul cu cea mai mică valoare f(n)
+        current_state, path = priority_queue.pop()
 
-        # b. Dacă poziția curentă este destinația finală, returnează calea
-        if problem.isGoalState(current_position):
+        # Dacă starea curentă este starea finală, returnează drumul până la această stare
+        if problem.isGoalState(current_state):
             return path
 
-        # c. Dacă current_position nu este în visited
-        if current_position not in visited:
-            # Adaugă current_position la visited
-            visited.add(current_position)
+        # Iterează prin fiecare succesor al stării curente
+        for successor, action, step_cost in problem.getSuccessors(current_state):
+            # Calculează costul total g(n) până la acest succesor
+            new_cost = cost_map[current_state] + step_cost
 
-            # d. Pentru fiecare succesor al current_position
-            for successor, action, step_cost in problem.getSuccessors(current_position):
+            # Dacă succesorul este nou sau am găsit un drum mai ieftin
+            if successor not in cost_map or new_cost < cost_map[successor]:
+                # Actualizează cost_map cu noul cost minim g(n)
+                cost_map[successor] = new_cost
+                # Calculează valoarea f(n) = g(n) + h(n)
+                priority = new_cost + heuristic(successor, problem)
+                # Adaugă succesorul în coada de priorități
+                priority_queue.push((successor, path + [action]), priority)
 
-                new_path = path + [action]
-                new_cost = problem.getCostOfActions(new_path)
-                heuristic_cost = heuristic(successor, problem)
-                total_cost = new_cost + heuristic_cost
-
-                # i. Dacă succesorul nu a fost vizitat sau am găsit un cost mai mic
-                if successor not in visited or new_cost < best_cost.get(successor, float('inf')):
-                    # Actualizează cel mai mic cost și adaugă succesorul în coadă cu noul cost total
-                    best_cost[successor] = new_cost
-                    queue.push((successor, new_path), total_cost)
-
-    # 4. Dacă nu s-a găsit o cale, returnează o listă goală
+    # 3. Dacă nu se găsește nicio soluție, returnează o listă goală
     return []
-
-
-
 
 
 
