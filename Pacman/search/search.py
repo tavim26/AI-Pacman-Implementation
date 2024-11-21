@@ -141,6 +141,7 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
 
 
+#uniform cost search
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     """
     Search the node of least total cost first.
@@ -150,44 +151,30 @@ def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
 
     from util import PriorityQueue
 
-    # 1. Inițializează coada de priorități cu starea inițială și costul 0
     start_position = problem.getStartState()
     priority_queue = PriorityQueue()
-    priority_queue.push((start_position, []), 0)  # Perechea (poziție, drum până aici), cost 0
+    priority_queue.push((start_position, []), 0)
 
-    # 2. Creează un dicționar pentru a stoca cel mai mic cost pentru fiecare stare
     cost_map = {start_position: 0}
 
-    # 3. Set pentru a urmări nodurile vizitate
     visited = set()
 
-    # 4. Cât timp coada de priorități nu este goală
     while not priority_queue.isEmpty():
-        # a. Extrage starea cu cel mai mic cost total
         current_position, path = priority_queue.pop()
 
-        # b. Dacă starea curentă este destinația finală, returnează drumul către destinație
         if problem.isGoalState(current_position):
             return path
 
-        # c. Dacă current_position nu este în visited
         if current_position not in visited:
-            # Adaugă current_position la visited
             visited.add(current_position)
 
-            # d. Pentru fiecare succesor (vecin) al current_position
             for successor, action, step_cost in problem.getSuccessors(current_position):
-                # Calculează noul cost al drumului până la acest succesor
                 new_cost = cost_map[current_position] + step_cost
 
-                # Dacă succesorul nu este în visited sau am găsit un drum mai ieftin
                 if successor not in visited or new_cost < cost_map.get(successor, float('inf')):
-                    # Actualizează cost_map cu noul cost minim
                     cost_map[successor] = new_cost
-                    # Adaugă succesorul în coada de priorități
                     priority_queue.push((successor, path + [action]), new_cost)
 
-    # 5. Dacă nu se găsește nicio soluție, returnează o listă goală
     return []
 
 
@@ -201,43 +188,32 @@ def nullHeuristic(state, problem=None) -> float:
     return 0
 
 
+# A Star search
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
 
 
     from util import PriorityQueue
 
-    # 1. Inițializarea cozii de priorități și a setului de stări vizitate
     start_state = problem.getStartState()
     priority_queue = PriorityQueue()
-    priority_queue.push((start_state, []), heuristic(start_state, problem))  # Adaugă starea inițială cu f(n) = h(n)
+    priority_queue.push((start_state, []), heuristic(start_state, problem))
 
-    # Dicționar pentru a stoca cel mai mic cost total până la fiecare nod
     cost_map = {start_state: 0}
 
-    # 2. Căutare în spațiul stărilor
     while not priority_queue.isEmpty():
-        # Extrage nodul cu cea mai mică valoare f(n)
         current_state, path = priority_queue.pop()
 
-        # Dacă starea curentă este starea finală, returnează drumul până la această stare
         if problem.isGoalState(current_state):
             return path
 
-        # Iterează prin fiecare succesor al stării curente
         for successor, action, step_cost in problem.getSuccessors(current_state):
-            # Calculează costul total g(n) până la acest succesor
             new_cost = cost_map[current_state] + step_cost
 
-            # Dacă succesorul este nou sau am găsit un drum mai ieftin
             if successor not in cost_map or new_cost < cost_map[successor]:
-                # Actualizează cost_map cu noul cost minim g(n)
                 cost_map[successor] = new_cost
-                # Calculează valoarea f(n) = g(n) + h(n)
                 priority = new_cost + heuristic(successor, problem)
-                # Adaugă succesorul în coada de priorități
                 priority_queue.push((successor, path + [action]), priority)
 
-    # 3. Dacă nu se găsește nicio soluție, returnează o listă goală
     return []
 
 
